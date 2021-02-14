@@ -13,7 +13,7 @@
 using namespace std;
 using namespace cimg_library;
 
-bool hit_sphere(const vec3 & center, float radius, const ray &r) 
+float hit_sphere(const vec3 & center, float radius, const ray &r) 
 {
 	/* ray collision with a sphere - returns true if ray intersects with the sphere, false otherwise */
 	vec3 oc = r.origin() - center;
@@ -22,25 +22,38 @@ bool hit_sphere(const vec3 & center, float radius, const ray &r)
 	float c = dot(oc,oc) - radius * radius;
 	float discrimiant = b * b - 4.0f * a * c;
 
-	return (discrimiant > 0);
+	if (discrimiant < 0) {
+		return -1.0f;
+	}
+	else {
+		return ((-b - sqrt(discrimiant)) / (2.0f * a));
+	}
 
+	//return (discrimiant > 0);
 }
 
 vec3 color(const ray &r) {
-	if (hit_sphere(vec3(0, 0, -1), 0.5, r)) return vec3(1, 0, 0);
+	vec3 sc(0, 0, -1);
+	float t = hit_sphere(sc, 0.5, r);
+	if (t > 0.0f) {
+		vec3 N = unit_vector(r.point_at_parameter(t) - sc);
+		return 0.5f* vec3(N.x() + 1, N.y() + 1, N.z()+1);
+	}
 
 	vec3 unit_direction = unit_vector(r.direction());
 	//positive shift then halve to lock between 0 and 1
-	float t = 0.5f * (unit_direction.y() + 1.0f);
+	t = 0.5f * (unit_direction.y() + 1.0f);
 
 	//linerally interpolate between white and our original color
 	return (1.0f -t) * vec3(1.0f,1.0f,1.0f) + t * vec3(0.5f,0.7f,1.0f);
 }
+
+
 int main()
 {
 	int nx, ny, countRows;
-	nx = 200;
-	ny = 100;
+	nx = 1000;
+	ny = 500;
 
 	//create new image 1 plane, 3 colors
 	CImg<unsigned char> img(nx, ny, 1, 3);
