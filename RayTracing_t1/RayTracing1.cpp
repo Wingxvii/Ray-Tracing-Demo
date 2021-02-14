@@ -13,7 +13,22 @@
 using namespace std;
 using namespace cimg_library;
 
+bool hit_sphere(const vec3 & center, float radius, const ray &r) 
+{
+	/* ray collision with a sphere - returns true if ray intersects with the sphere, false otherwise */
+	vec3 oc = r.origin() - center;
+	float a = dot(r.direction(), r.direction());
+	float b = 2.0f* dot(r.direction(), oc);
+	float c = dot(oc,oc) - radius * radius;
+	float discrimiant = b * b - 4.0f * a * c;
+
+	return (discrimiant > 0);
+
+}
+
 vec3 color(const ray &r) {
+	if (hit_sphere(vec3(0, 0, -1), 0.5, r)) return vec3(1, 0, 0);
+
 	vec3 unit_direction = unit_vector(r.direction());
 	//positive shift then halve to lock between 0 and 1
 	float t = 0.5f * (unit_direction.y() + 1.0f);
