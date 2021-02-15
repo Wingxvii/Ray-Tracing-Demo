@@ -96,7 +96,15 @@ int main()
 
 	hittable* world = new hittable_list(list, 4); 
 
-	camera cam;
+	vec3 lookfrom(3, 3, 2);
+	vec3 lookat(0, 0, -1);
+	float dist_to_focus = (lookfrom - lookat).length();
+	float aperature = 1.0f;
+
+	camera cam(lookfrom, lookat, vec3(0,1,0), 20, float(nx)/float(ny), aperature, dist_to_focus);
+
+
+
 	int numSamples = 100;
 
 	//go through every pixel
@@ -142,3 +150,12 @@ int main()
 	}
 }
 
+//challenges:
+
+//create an intresting scene with 100 spheres, use loop*****
+//plays with different shapes (cube)
+//play with different refractions, or sub-surface scattereing (ggx)
+//increase resolution
+//play with samples per pixel
+//move camera around/ objects around procedurally and render each frame to make a video*****
+//volumetric effects like smoke
