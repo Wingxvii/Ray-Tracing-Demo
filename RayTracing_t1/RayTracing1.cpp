@@ -14,6 +14,10 @@
 using namespace std;
 using namespace cimg_library;
 
+int nx, ny, countRows;
+hittable* world;
+int totalSamples;
+const int MAX_SAMPLES = 100;
 
 vec3 color(const ray &r, hittable *world, int depth) {
 	hit_record rec;
@@ -71,11 +75,43 @@ public:
 
 };
 
+void update(CImg<unsigned char>& img, camera cam) {
+	for (int j = ny - 1; j >= 0; j--, countRows++) {
+		for (int i = 0; i < nx; i++) {
+			vec3 col(0, 0, 0);
+
+			//recall, then unsaturate prior pixel color based on equal ratio if image already exists
+			if (totalSamples != 0) {
+				col = vec3(img(i, j, 0, 0), img(i, j, 0, 1), img(i, j, 0, 2));
+				col *= (totalSamples - 1) / (float)totalSamples;
+			}
+
+			float u = (i + random_double()) / float(nx);
+			float v = float((ny - j) + random_double()) / float(ny);
+			ray r = cam.get_ray(u, v);
+
+			//add new color, ratio with existing samples, and convert into 256 range
+			col[0] += int(255.99f * color(r, world, 0)[0] / (float)totalSamples);
+			col[1] += int(255.99f * color(r, world, 0)[1] / (float)totalSamples);
+			col[2] += int(255.99f * color(r, world, 0)[2] / (float)totalSamples);
+
+			//set channels
+			img(i, j, 0, 0) = col[0];
+			img(i, j, 0, 1) = col[1];
+			img(i, j, 0, 2) = col[2];
+		}
+		////progress output
+		//float percentDone = 100.f * (float(countRows) / float(ny - 1));
+	}
+	cout << totalSamples << " Samples" << endl;
+	totalSamples++;
+}
+
 int main()
 {
-	int nx, ny, countRows;
-	nx = 500;
-	ny = 250;
+	nx = 1000;
+	ny = 500;
+	totalSamples = 0;
 
 	//create new image 1 plane, 3 colors
 	CImg<unsigned char> img(nx, ny, 1, 3);
@@ -83,70 +119,32 @@ int main()
 	CImgDisplay canvas(img, "RayTracing Test2", 0);
 
 	countRows = 0;
-	//vec3 origin(0.0f, 0.0f, 0.0f);
-	//vec3 lower_left_corner(-2.0, -1.0f,-1.0f);
-	//vec3 horizontal(4.0f, 0.0f, 0.0f);
-	//vec3 vertical(0.0f, 2.0f, 0.0f);
-
 	hittable* list[4];
 	list[0] = new sphere(vec3(0, 0, -1), 0.5f, new lambertian(vec3(0.8,0.3,0.3)));
 	list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
 	list[2] = new sphere(vec3(1, 0, -1), 0.5f, new metal(vec3(0.8, 0.8, 0.8)));
 	list[3] = new sphere(vec3(0.5, 0.5, -1), 0.25f, new metal(vec3(0.8, 0.8, 0.8)));
 
-	hittable* world = new hittable_list(list, 4); 
+	world = new hittable_list(list, 4); 
 
 	vec3 lookfrom(3, 3, 2);
 	vec3 lookat(0, 0, -1);
 	float dist_to_focus = (lookfrom - lookat).length();
-	float aperature = 1.0f;
+	float aperature = 0.01f;
 
 	camera cam(lookfrom, lookat, vec3(0,1,0), 20, float(nx)/float(ny), aperature, dist_to_focus);
 
-
-
-	int numSamples = 100;
-
 	//go through every pixel
-	for (int j = ny - 1; j >= 0; j--, countRows++) {
-		for (int i = 0; i < nx; i++) {
-			vec3 col(0, 0, 0);
 
-			for (int sample = 0; sample < numSamples; sample++) {
-				float u = (i + random_double()) / float(nx);
-				float v = float((ny - j) + random_double()) / float(ny);
-				ray r = cam.get_ray(u, v);
-				col += color(r, world, 0);
-			}
-			col /= float(numSamples);
-			//float u = (float)(i) / (float)nx;
-			//float v = (float)(j) / (float)ny;
-			//shoot a ray from origin to every pixel
-			//ray r(origin, lower_left_corner + u * horizontal + v * vertical);
-			//compute color
-			//vec3 col = color(r, world);
-
-			//convert into 256 range
-			int ir = int(255.99f * col[0]);
-			int ig = int(255.99f * col[1]);
-			int ib = int(255.99f * col[2]);
-			
-			//set channels
-			img(i, j, 0, 0) = ir;
-			img(i, j, 0, 1) = ig;
-			img(i, j, 0, 2) = ib;
-		}
-		//progress output
-		float percentDone = 100.f * (float(countRows) / float(ny - 1));
-		cout << percentDone << "%" << endl;
-	}
 	canvas.resize(nx, ny);
 	//flip to invert coordinate system to match windows
 	//img.mirror('y');
 	//display image
 	while (!canvas.is_closed() && !canvas.is_keyESC()) {
+		if (totalSamples < MAX_SAMPLES) {
+			update(img, cam);
+		}
 		img.display(canvas);
-		cimg::wait(20);	//20 ms per frame
 	}
 }
 
