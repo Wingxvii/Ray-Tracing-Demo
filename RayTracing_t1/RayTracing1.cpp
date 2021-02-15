@@ -17,8 +17,12 @@ using namespace cimg_library;
 
 vec3 color(const ray &r, hittable *world) {
 	hit_record rec;
-	if (world->hit(r, 0.0, FLT_MAX, rec)) {
-		return 0.5f * vec3(rec.normal.x() + 1, rec.normal.y() + 1, rec.normal.z() + 1);
+	if (world->hit(r, 0.001, FLT_MAX, rec)) {
+		/*this is where we have definately hit an object with our ray*/
+		vec3 target = rec.p + rec.normal + random_in_unit_sphere();
+		return 0.5f * color(ray(rec.p, target - rec.p), world);
+
+		//return 0.5f * vec3(rec.normal.x() + 1, rec.normal.y() + 1, rec.normal.z() + 1);
 	}
 	else {
 
