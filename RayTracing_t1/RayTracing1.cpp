@@ -9,29 +9,11 @@
 #include "vec3.h"
 #include "utils.h"
 #include "ray.h"
+#include "camera.h"
 
 using namespace std;
 using namespace cimg_library;
 
-
-//float hit_sphere(const vec3 & center, float radius, const ray &r) 
-//{
-//	/* ray collision with a sphere - returns true if ray intersects with the sphere, false otherwise */
-//	vec3 oc = r.origin() - center;
-//	float a = dot(r.direction(), r.direction());
-//	float b = 2.0f* dot(r.direction(), oc);
-//	float c = dot(oc,oc) - radius * radius;
-//	float discrimiant = b * b - 4.0f * a * c;
-//
-//	if (discrimiant < 0) {
-//		return -1.0f;
-//	}
-//	else {
-//		return ((-b - sqrt(discrimiant)) / (2.0f * a));
-//	}
-//
-//	//return (discrimiant > 0);
-//}
 
 vec3 color(const ray &r, hittable *world) {
 	hit_record rec;
@@ -80,8 +62,8 @@ public:
 int main()
 {
 	int nx, ny, countRows;
-	nx = 200;
-	ny = 100;
+	nx = 1000;
+	ny = 500;
 
 	//create new image 1 plane, 3 colors
 	CImg<unsigned char> img(nx, ny, 1, 3);
@@ -89,28 +71,37 @@ int main()
 	CImgDisplay canvas(img, "RayTracing Test2", 0);
 
 	countRows = 0;
-	vec3 origin(0.0f, 0.0f, 0.0f);
-	vec3 lower_left_corner(-2.0, -1.0f,-1.0f);
-	vec3 horizontal(4.0f, 0.0f, 0.0f);
-	vec3 vertical(0.0f, 2.0f, 0.0f);
+	//vec3 origin(0.0f, 0.0f, 0.0f);
+	//vec3 lower_left_corner(-2.0, -1.0f,-1.0f);
+	//vec3 horizontal(4.0f, 0.0f, 0.0f);
+	//vec3 vertical(0.0f, 2.0f, 0.0f);
 
 	hittable* list[2];
 	list[0] = new sphere(vec3(0, 0, -1), 0.5f);
 	list[1] = new sphere(vec3(0, -100.5, -1), 100);
 	hittable* world = new hittable_list(list, 2); 
 
-	
+	camera cam;
+	int numSamples = 100;
+
 	//go through every pixel
 	for (int j = ny - 1; j >= 0; j--, countRows++) {
 		for (int i = 0; i < nx; i++) {
-			
-			float u = (float)(i) / (float)nx;
-			float v = (float)(j) / (float)ny;
-			//shoot a ray from origin to every pixel
-			ray r(origin, lower_left_corner + u * horizontal + v * vertical);
+			vec3 col(0, 0, 0);
 
+			for (int sample = 0; sample < numSamples; sample++) {
+				float u = (i + random_double()) / float(nx);
+				float v = float((ny - j) + random_double()) / float(ny);
+				ray r = cam.get_ray(u, v);
+				col += color(r, world);
+			}
+			col /= float(numSamples);
+			//float u = (float)(i) / (float)nx;
+			//float v = (float)(j) / (float)ny;
+			//shoot a ray from origin to every pixel
+			//ray r(origin, lower_left_corner + u * horizontal + v * vertical);
 			//compute color
-			vec3 col = color(r, world);
+			//vec3 col = color(r, world);
 
 			//convert into 256 range
 			int ir = int(255.99f * col[0]);
@@ -128,7 +119,7 @@ int main()
 	}
 	canvas.resize(nx, ny);
 	//flip to invert coordinate system to match windows
-	img.mirror('y');
+	//img.mirror('y');
 	//display image
 	while (!canvas.is_closed() && !canvas.is_keyESC()) {
 		img.display(canvas);
