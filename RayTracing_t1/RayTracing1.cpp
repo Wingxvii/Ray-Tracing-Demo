@@ -15,12 +15,20 @@ using namespace std;
 using namespace cimg_library;
 
 
-vec3 color(const ray &r, hittable *world) {
+vec3 color(const ray &r, hittable *world, int depth) {
 	hit_record rec;
 	if (world->hit(r, 0.001, FLT_MAX, rec)) {
+		ray scattered;
+		vec3 attenuation;
+
+
 		/*this is where we have definately hit an object with our ray*/
-		vec3 target = rec.p + rec.normal + random_in_unit_sphere();
-		return 0.5f * color(ray(rec.p, target - rec.p), world);
+		if (depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered)) {
+			return attenuation * color(scattered, world, depth + 1);
+		}
+		else {
+			return vec3(0, 0, 0);
+		}
 
 		//return 0.5f * vec3(rec.normal.x() + 1, rec.normal.y() + 1, rec.normal.z() + 1);
 	}
@@ -66,8 +74,8 @@ public:
 int main()
 {
 	int nx, ny, countRows;
-	nx = 1000;
-	ny = 500;
+	nx = 500;
+	ny = 250;
 
 	//create new image 1 plane, 3 colors
 	CImg<unsigned char> img(nx, ny, 1, 3);
@@ -81,8 +89,8 @@ int main()
 	//vec3 vertical(0.0f, 2.0f, 0.0f);
 
 	hittable* list[2];
-	list[0] = new sphere(vec3(0, 0, -1), 0.5f);
-	list[1] = new sphere(vec3(0, -100.5, -1), 100);
+	list[0] = new sphere(vec3(0, 0, -1), 0.5f, new lambertian(vec3(0.8,0.3,0.3)));
+	list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
 	hittable* world = new hittable_list(list, 2); 
 
 	camera cam;
@@ -97,7 +105,7 @@ int main()
 				float u = (i + random_double()) / float(nx);
 				float v = float((ny - j) + random_double()) / float(ny);
 				ray r = cam.get_ray(u, v);
-				col += color(r, world);
+				col += color(r, world, 0);
 			}
 			col /= float(numSamples);
 			//float u = (float)(i) / (float)nx;

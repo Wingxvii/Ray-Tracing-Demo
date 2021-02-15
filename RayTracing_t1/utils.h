@@ -25,12 +25,24 @@ vec3 random_in_unit_disk() {
 	return p;
 }
 
+class material;
+
 struct hit_record {
 	float t;
 	vec3 p;
 	vec3 normal;
+	material* mat_ptr;
 
 };
+
+/*abstract material class*/
+class material {
+public:
+	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attentuation, ray& scattered) const = 0;
+};
+
+
+
 
 class hittable {
 public:
@@ -41,6 +53,7 @@ class sphere : public hittable {
 public:
 	sphere() {}
 	sphere(vec3 cen, float r) : center(cen), radius(r) {};
+	sphere(vec3 cen, float r, material *m) : center(cen), radius(r), mat_ptr(m) {};
 
 	virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const {
 		{
@@ -61,6 +74,7 @@ public:
 					rec.t = temp;
 					rec.p = r.point_at_parameter(rec.t);
 					rec.normal = (rec.p - center) / radius;
+					rec.mat_ptr = mat_ptr;
 					return true;
 				}
 
@@ -70,6 +84,7 @@ public:
 					rec.t = temp;
 					rec.p = r.point_at_parameter(rec.t);
 					rec.normal = (rec.p - center) / radius;
+					rec.mat_ptr = mat_ptr;
 					return true;
 				}
 
@@ -81,4 +96,20 @@ public:
 	/* members */
 	vec3 center;
 	float radius;
+	material* mat_ptr; //every sphere has a material
+};
+
+// bunch of materials
+class lambertian : public material {
+public:
+	lambertian(const vec3& a) : albedo(a){}
+	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {
+		attenuation = albedo;
+		vec3 target = rec.p + rec.normal + random_in_unit_sphere();
+		scattered = ray(rec.p, target - rec.p);
+
+		return true;
+	}
+
+	vec3 albedo;
 };
