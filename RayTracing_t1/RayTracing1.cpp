@@ -88,10 +88,13 @@ int main()
 	//vec3 horizontal(4.0f, 0.0f, 0.0f);
 	//vec3 vertical(0.0f, 2.0f, 0.0f);
 
-	hittable* list[2];
+	hittable* list[4];
 	list[0] = new sphere(vec3(0, 0, -1), 0.5f, new lambertian(vec3(0.8,0.3,0.3)));
 	list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
-	hittable* world = new hittable_list(list, 2); 
+	list[2] = new sphere(vec3(1, 0, -1), 0.5f, new metal(vec3(0.8, 0.8, 0.8)));
+	list[3] = new sphere(vec3(0.5, 0.5, -1), 0.25f, new metal(vec3(0.8, 0.8, 0.8)));
+
+	hittable* world = new hittable_list(list, 4); 
 
 	camera cam;
 	int numSamples = 100;

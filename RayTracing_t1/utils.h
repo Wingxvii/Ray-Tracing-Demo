@@ -113,3 +113,24 @@ public:
 
 	vec3 albedo;
 };
+
+//from glsl reference page
+vec3 reflect(vec3 I, vec3 N) {
+	return I - 2.0f * dot(I, N) * N;
+}
+
+class metal : public material {
+public:
+	metal(const vec3& a) : albedo(a), fuzz(1) {}
+	metal(const vec3& a, float f) : albedo(a), fuzz(f) {}
+
+	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const {
+		vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
+		scattered = ray(rec.p, reflected + fuzz * random_in_unit_sphere());
+		attenuation = albedo;
+		return (dot(scattered.direction(), rec.normal) > 0);
+	}
+
+	vec3 albedo;
+	float fuzz;
+};
