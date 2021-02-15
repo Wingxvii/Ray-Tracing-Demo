@@ -23,25 +23,27 @@ public:
 	}
 
 	camera(vec3 lookfrom, vec3 lookat, vec3 vup, float vfov, float aspect, float aperture, float focus_dist) {
-		lens_radius = aperture / 2.0f;
-		float theta = vfov * M_PI / 180.0f;
-		float half_height = tan(theta / 2);
-		float half_width = aspect * half_height;
-		origin = lookfrom;
-		//this is our camera coordinate system
-		//direction vecctor
-		w = unit_vector(lookfrom - lookat);
-		//left/right vector
-		u = unit_vector(cross(vup, w));
-		//new up vector
-		v = cross(w, u);
-		//fector operations based on coordinate system and focal length to give us image corner
-		lower_left_corner = origin - half_width * focus_dist * u - half_height * focus_dist * v - focus_dist * w;
-		//image directions in x/y
-		horizontal = 2 * half_width * focus_dist * u;
-		vertical = 2 * half_height * focus_dist * v;
+		m_lookfrom = lookfrom;
+		m_lookat = lookat;
+		m_vup = vup;
+			
+		m_vfov = vfov;
+		m_aspect = aspect;
+		m_aperture = aperture;
+		m_focus_dist = focus_dist;
+		calculate();
 	}
 
+	void move(vec3 movement) {
+		m_lookfrom += movement;
+		m_lookat += movement;
+		calculate();
+	}
+
+	void turn(vec3 turn) {
+		m_lookat += turn;
+		calculate();
+	}
 
 	ray get_ray(float s, float t) {
 		vec3 rd = lens_radius * random_in_unit_disk();
@@ -52,10 +54,34 @@ public:
 		//	lower_left_corner + u * horizontal + v * vertical - origin);
 	}
 
+	void calculate() {
+		lens_radius = m_aperture / 2.0f;
+		float theta = m_vfov * M_PI / 180.0f;
+		float half_height = tan(theta / 2);
+		float half_width = m_aspect * half_height;
+		origin = m_lookfrom;
+		//this is our camera coordinate system
+		//direction vecctor
+		w = unit_vector(m_lookfrom - m_lookat);
+		//left/right vector
+		u = unit_vector(cross(m_vup, w));
+		//new up vector
+		v = cross(w, u);
+		//fector operations based on coordinate system and focal length to give us image corner
+		lower_left_corner = origin - half_width * m_focus_dist * u - half_height * m_focus_dist * v - m_focus_dist * w;
+		//image directions in x/y
+		horizontal = 2 * half_width * m_focus_dist * u;
+		vertical = 2 * half_height * m_focus_dist * v;
+
+	}
+
 	vec3 origin;
 	vec3 lower_left_corner;
 	vec3 horizontal;
 	vec3 vertical;
+
+	vec3 m_lookfrom, m_lookat, m_vup;
+	float m_vfov, m_aspect, m_aperture, m_focus_dist;
 
 	vec3 u, v, w;
 	float lens_radius;

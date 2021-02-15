@@ -18,6 +18,8 @@ int nx, ny, countRows;
 hittable* world;
 int totalSamples;
 const int MAX_SAMPLES = 100;
+float movespeed = 0.2;
+float turnrate = 0.5;
 
 vec3 color(const ray &r, hittable *world, int depth) {
 	hit_record rec;
@@ -103,8 +105,9 @@ void update(CImg<unsigned char>& img, camera cam) {
 		////progress output
 		//float percentDone = 100.f * (float(countRows) / float(ny - 1));
 	}
-	cout << totalSamples << " Samples" << endl;
+
 	totalSamples++;
+	cout << totalSamples << " Samples" << endl;
 }
 
 int main()
@@ -137,13 +140,66 @@ int main()
 	//go through every pixel
 
 	canvas.resize(nx, ny);
+
 	//flip to invert coordinate system to match windows
 	//img.mirror('y');
 	//display image
 	while (!canvas.is_closed() && !canvas.is_keyESC()) {
+
+		/*Movement check*/
+		if (canvas.is_keyW()) {
+			cam.move(vec3(0, movespeed, 0));
+			totalSamples = 0;
+		}
+		else if (canvas.is_keyS()) {
+			cam.move(vec3(0, -movespeed, 0));
+			totalSamples = 0;
+		}
+		else if (canvas.is_keyA()) {
+			cam.move(vec3(0, 0, movespeed));
+			totalSamples = 0;
+		}
+		else if (canvas.is_keyD()) {
+			cam.move(vec3(0, 0, -movespeed));
+			totalSamples = 0;
+		}
+		else if (canvas.is_keyQ()) {
+			cam.move(vec3(movespeed, 0, 0));
+			totalSamples = 0;
+		}
+		else if (canvas.is_keyE()) {
+			cam.move(vec3(-movespeed, 0, 0));
+			totalSamples = 0;
+		}
+		if (canvas.is_keyI()) {
+			cam.move(vec3(0, turnrate, 0));
+			totalSamples = 0;
+		}
+		else if (canvas.is_keyK()) {
+			cam.turn(vec3(0, -turnrate, 0));
+			totalSamples = 0;
+		}
+		else if (canvas.is_keyJ()) {
+			cam.turn(vec3(0, 0, turnrate));
+			totalSamples = 0;
+		}
+		else if (canvas.is_keyL()) {
+			cam.turn(vec3(0, 0, -turnrate));
+			totalSamples = 0;
+		}
+		else if (canvas.is_keyU()) {
+			cam.turn(vec3(turnrate, 0, 0));
+			totalSamples = 0;
+		}
+		else if (canvas.is_keyO()) {
+			cam.turn(vec3(-turnrate, 0, 0));
+			totalSamples = 0;
+		}
+
 		if (totalSamples < MAX_SAMPLES) {
 			update(img, cam);
 		}
+
 		img.display(canvas);
 	}
 }
