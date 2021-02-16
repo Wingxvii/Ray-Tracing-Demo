@@ -27,7 +27,6 @@ vec3 color(const ray &r, hittable *world, int depth) {
 		ray scattered;
 		vec3 attenuation;
 
-
 		/*this is where we have definately hit an object with our ray*/
 		if (depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered)) {
 			return attenuation * color(scattered, world, depth + 1);
@@ -35,8 +34,6 @@ vec3 color(const ray &r, hittable *world, int depth) {
 		else {
 			return vec3(0, 0, 0);
 		}
-
-		//return 0.5f * vec3(rec.normal.x() + 1, rec.normal.y() + 1, rec.normal.z() + 1);
 	}
 	else {
 
@@ -206,10 +203,10 @@ int main()
 
 //challenges:
 
-//create an intresting scene with 100 spheres, use loop*****
+//create an intresting scene with 100 spheres, use loop
 //plays with different shapes (cube)
 //play with different refractions, or sub-surface scattereing (ggx)
 //increase resolution
-//play with samples per pixel
+//play with samples per pixels*****
 //move camera around/ objects around procedurally and render each frame to make a video*****
 //volumetric effects like smoke
